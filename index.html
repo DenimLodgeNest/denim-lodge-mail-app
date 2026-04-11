@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Denim Lodge & Nest - メール作成アプリ</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif; background: #f5f0eb; color: #333; }
+
+.header {
+  background: linear-gradient(135deg, #1a3a5c 0%, #2c5f8a 100%);
+  color: white; padding: 20px 30px; display: flex; align-items: center; gap: 15px;
+}
+.header h1 { font-size: 22px; font-weight: 600; }
+.header .subtitle { font-size: 13px; opacity: 0.8; margin-top: 3px; }
+
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.panel {
+  background: white; border-radius: 12px; padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.panel h2 {
+  font-size: 16px; color: #1a3a5c; margin-bottom: 16px;
+  padding-bottom: 8px; border-bottom: 2px solid #e8ddd3;
+}
+
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;
+  font-size: 14px; transition: border-color 0.2s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none; border-color: #2c5f8a; box-shadow: 0 0 0 3px rgba(44,95,138,0.1);
+}
+.form-group textarea { resize: vertical; min-height: 100px; font-family: inherit; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+.btn {
+  padding: 12px 24px; border: none; border-radius: 8px; font-size: 15px;
+  font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #2c5f8a, #1a3a5c); color: white; width: 100%;
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(44,95,138,0.3); }
+.btn-copy {
+  background: #e8ddd3; color: #1a3a5c; margin-top: 10px; width: 100%;
+}
+.btn-copy:hover { background: #d4c4b5; }
+.btn-copy.copied { background: #4caf50; color: white; }
+
+.output-area {
+  width: 100%; min-height: 400px; padding: 16px; border: 1px solid #ddd;
+  border-radius: 8px; font-size: 14px; line-height: 1.7; white-space: pre-wrap;
+  word-wrap: break-word; background: #fafaf8; font-family: inherit;
+  resize: vertical;
+}
+
+.template-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;
+}
+.template-btn {
+  padding: 10px 12px; border: 2px solid #e8ddd3; border-radius: 8px;
+  background: white; cursor: pointer; text-align: left; font-size: 12px;
+  transition: all 0.2s; line-height: 1.4;
+}
+.template-btn:hover { border-color: #2c5f8a; background: #f0f5fa; }
+.template-btn.active { border-color: #2c5f8a; background: #e8f0f8; font-weight: 600; }
+.template-btn.hidden { display: none; }
+.template-btn .tag {
+  display: inline-block; padding: 1px 6px; border-radius: 4px;
+  font-size: 10px; font-weight: 600; margin-bottom: 3px;
+}
+.tag-en { background: #e3f2fd; color: #1565c0; }
+.tag-jp { background: #fce4ec; color: #c62828; }
+.tag-both { background: #e8f5e9; color: #2e7d32; }
+
+.section-label {
+  font-size: 13px; font-weight: 700; color: #1a3a5c; margin: 12px 0 6px;
+  padding: 4px 8px; background: #f0f5fa; border-radius: 4px;
+}
+.section-label.hidden { display: none; }
+
+.customer-email-box {
+  width: 100%; min-height: 120px; padding: 12px; border: 2px dashed #ccc;
+  border-radius: 8px; font-size: 14px; line-height: 1.6; background: #fffef9;
+  font-family: inherit; resize: vertical;
+}
+.customer-email-box:focus { border-color: #2c5f8a; outline: none; }
+
+.info-note {
+  background: #fff3e0; border-left: 4px solid #ff9800; padding: 10px 14px;
+  border-radius: 0 8px 8px 0; font-size: 12px; margin-bottom: 14px; line-height: 1.5;
+}
+
+/* OTA選択ボタン */
+.ota-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px;
+}
+.ota-btn {
+  padding: 12px 8px; border: 2px solid #d0d0d0; border-radius: 10px;
+  background: white; cursor: pointer; text-align: center; font-size: 13px;
+  font-weight: 600; transition: all 0.2s; line-height: 1.3;
+}
+.ota-btn:hover { border-color: #2c5f8a; background: #f0f5fa; }
+.ota-btn.active { border-color: #2c5f8a; background: #1a3a5c; color: white; }
+.ota-btn .ota-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+.ota-btn .ota-sub { font-size: 10px; font-weight: 400; opacity: 0.7; display: block; margin-top: 2px; }
+
+.payment-fields { transition: all 0.3s; }
+.payment-fields.dimmed { opacity: 0.3; pointer-events: none; }
+.payment-fields .payment-note {
+  background: #e8f5e9; border-left: 4px solid #4caf50; padding: 8px 12px;
+  border-radius: 0 8px 8px 0; font-size: 12px; margin-bottom: 10px; line-height: 1.5; color: #2e7d32;
+}
+.payment-fields .payment-note.need-link {
+  background: #fff3e0; border-left-color: #ff9800; color: #e65100;
+}
+
+/* パスワード画面 */
+.lock-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(135deg, #1a3a5c 0%, #2c5f8a 50%, #1a3a5c 100%);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.lock-overlay.hidden { display: none; }
+.lock-box {
+  background: white; border-radius: 16px; padding: 40px 36px; text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 400px; width: 90%;
+}
+.lock-box .lock-icon { font-size: 48px; margin-bottom: 12px; }
+.lock-box h2 { font-size: 20px; color: #1a3a5c; margin-bottom: 6px; }
+.lock-box .lock-sub { font-size: 13px; color: #888; margin-bottom: 20px; }
+.lock-box input {
+  width: 100%; padding: 12px 16px; border: 2px solid #ddd; border-radius: 8px;
+  font-size: 16px; text-align: center; letter-spacing: 2px;
+}
+.lock-box input:focus { outline: none; border-color: #2c5f8a; }
+.lock-box .lock-btn {
+  width: 100%; padding: 12px; margin-top: 12px; border: none; border-radius: 8px;
+  background: linear-gradient(135deg, #2c5f8a, #1a3a5c); color: white;
+  font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.lock-box .lock-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(44,95,138,0.3); }
+.lock-box .lock-error {
+  color: #c62828; font-size: 13px; margin-top: 10px; min-height: 20px;
+}
+
+/* メインコンテンツ：ログイン前は非表示 */
+.app-content.locked { display: none; }
+
+@media (max-width: 900px) {
+  .container { grid-template-columns: 1fr; }
+  .template-grid { grid-template-columns: 1fr; }
+  .ota-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- パスワード画面 -->
+<div class="lock-overlay" id="lockOverlay">
+  <div class="lock-box">
+    <div class="lock-icon">🔒</div>
+    <h2>Denim Lodge & Nest</h2>
+    <div class="lock-sub">スタッフ専用メール作成アプリ</div>
+    <input type="password" id="lockPassword" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter') unlock()">
+    <button class="lock-btn" onclick="unlock()">ログイン</button>
+    <div class="lock-error" id="lockError"></div>
+  </div>
+</div>
+
+<!-- メインコンテンツ -->
+<div class="app-content locked" id="appContent">
+
+<div class="header">
+  <div>
+    <h1>Denim Lodge & Nest - メール作成アプリ</h1>
+    <div class="subtitle">お客様のメールに合わせた返信メールを自動作成</div>
+  </div>
+</div>
+
+<div class="container">
+  <!-- 左パネル：入力 -->
+  <div>
+    <div class="panel" style="margin-bottom:20px">
+      <h2>STEP 1: お客様のメール（参考用）</h2>
+      <textarea class="customer-email-box" id="customerEmail" placeholder="お客様からのメールをここに貼り付けてください..."></textarea>
+    </div>
+
+    <div class="panel" style="margin-bottom:20px">
+      <h2>STEP 2: 予約経路（OTA）を選択</h2>
+      <div class="ota-grid">
+        <button class="ota-btn" onclick="selectOTA('booking')" data-ota="booking">
+          <span class="ota-icon">B</span>
+          Booking.com
+          <span class="ota-sub">= Agoda</span>
+        </button>
+        <button class="ota-btn" onclick="selectOTA('airbnb')" data-ota="airbnb">
+          <span class="ota-icon">A</span>
+          Airbnb
+        </button>
+        <button class="ota-btn" onclick="selectOTA('jalan')" data-ota="jalan">
+          <span class="ota-icon">J</span>
+          じゃらん
+        </button>
+        <button class="ota-btn" onclick="selectOTA('hp')" data-ota="hp">
+          <span class="ota-icon">H</span>
+          自社予約
+          <span class="ota-sub">HP経由</span>
+        </button>
+        <button class="ota-btn" onclick="selectOTA('phone')" data-ota="phone">
+          <span class="ota-icon">T</span>
+          電話・紹介
+          <span class="ota-sub">決済リンク要</span>
+        </button>
+      </div>
+      <div id="otaStatusMsg" style="font-size:12px; color:#888; text-align:center;">予約経路を選択してください</div>
+    </div>
+
+    <div class="panel" style="margin-bottom:20px">
+      <h2>STEP 3: お客様情報を入力</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>お客様の名前（姓 or ファーストネーム）</label>
+          <input type="text" id="guestName" placeholder="例: 小西 / Skylar">
+        </div>
+        <div class="form-group">
+          <label>敬称</label>
+          <select id="honorific">
+            <option value="様">様（日本語）</option>
+            <option value="-san">-san（英語）</option>
+            <option value="さん">さん</option>
+            <option value="">なし</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row3">
+        <div class="form-group">
+          <label>宿泊人数</label>
+          <input type="number" id="guestCount" min="1" max="6" value="1">
+        </div>
+        <div class="form-group">
+          <label>宿泊数</label>
+          <input type="number" id="nightCount" min="1" max="30" value="1">
+        </div>
+        <div class="form-group">
+          <label>部屋</label>
+          <select id="roomType">
+            <option value="A">Room-A</option>
+            <option value="B">Room-B</option>
+            <option value="C">Room-C</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>チェックイン日</label>
+          <input type="date" id="checkinDate">
+        </div>
+        <div class="form-group">
+          <label>チェックイン時間</label>
+          <input type="text" id="checkinTime" placeholder="例: 16:00～17:00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>宿泊料金（税込）</label>
+          <input type="text" id="totalPrice" placeholder="例: 16,500">
+        </div>
+        <div class="form-group">
+          <label>お客さんの出発地（任意）</label>
+          <input type="text" id="guestOrigin" placeholder="例: 神戸 / Korea">
+        </div>
+      </div>
+
+      <!-- 決済リンク欄（電話・紹介 / 自社予約のみ表示） -->
+      <div class="payment-fields dimmed" id="paymentFields">
+        <div class="payment-note" id="paymentNote">
+          OTA経由の予約は事前オンライン決済済みです。決済リンクは不要です。
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>決済リンク（Square）</label>
+            <input type="text" id="paymentLink" placeholder="https://square.link/u/...">
+          </div>
+          <div class="form-group">
+            <label>支払い期限日</label>
+            <input type="date" id="paymentDeadline">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>STEP 4: テンプレートを選択</h2>
+
+      <div class="section-label" id="sec-booking">予約承認・確定時</div>
+      <div class="template-grid" id="grid-booking">
+        <button class="template-btn" onclick="selectTemplate('ota_confirm_en')" data-ota="booking,airbnb,jalan">
+          <span class="tag tag-en">EN</span><br>予約直後の完全版（All OTA）
+        </button>
+        <button class="template-btn" onclick="selectTemplate('ota_confirm_jp')" data-ota="booking,airbnb,jalan">
+          <span class="tag tag-jp">JP</span><br>予約直後の完全版（All OTA）
+        </button>
+        <button class="template-btn" onclick="selectTemplate('hp_confirm_en')" data-ota="hp,phone">
+          <span class="tag tag-en">EN</span><br>予約直後の完全版（自社予約）
+        </button>
+        <button class="template-btn" onclick="selectTemplate('hp_confirm_jp')" data-ota="hp,phone">
+          <span class="tag tag-jp">JP</span><br>予約直後の完全版（自社予約）
+        </button>
+      </div>
+
+      <div class="section-label" id="sec-checkin">チェックイン前</div>
+      <div class="template-grid" id="grid-checkin">
+        <button class="template-btn" onclick="selectTemplate('what_time_en')" data-ota="all">
+          <span class="tag tag-en">EN</span><br>直近の到着時間質問
+        </button>
+        <button class="template-btn" onclick="selectTemplate('what_time_jp')" data-ota="all">
+          <span class="tag tag-jp">JP</span><br>直近の到着時間質問
+        </button>
+        <button class="template-btn" onclick="selectTemplate('early_ci_en')" data-ota="all">
+          <span class="tag tag-en">EN</span><br>アーリーC/I OK（掃除まだ）
+        </button>
+      </div>
+
+      <div class="section-label" id="sec-special">特殊対応</div>
+      <div class="template-grid" id="grid-special">
+        <button class="template-btn" onclick="selectTemplate('child_booking_jp')" data-ota="booking,airbnb">
+          <span class="tag tag-jp">JP</span><br>子供泊まれる？（Airbnb/Booking）
+        </button>
+      </div>
+
+      <div class="section-label" id="sec-guide">案内・ガイド・署名</div>
+      <div class="template-grid" id="grid-guide">
+        <button class="template-btn" onclick="selectTemplate('parking_jp')" data-ota="all">
+          <span class="tag tag-jp">JP</span><br>駐車場案内
+        </button>
+        <button class="template-btn" onclick="selectTemplate('parking_en')" data-ota="all">
+          <span class="tag tag-en">EN</span><br>駐車場案内
+        </button>
+        <button class="template-btn" onclick="selectTemplate('guide_en')" data-ota="all">
+          <span class="tag tag-en">EN</span><br>児島ガイド案内
+        </button>
+        <button class="template-btn" onclick="selectTemplate('guide_jp')" data-ota="all">
+          <span class="tag tag-jp">JP</span><br>児島ガイド案内
+        </button>
+        <button class="template-btn" onclick="selectTemplate('signature_en')" data-ota="all">
+          <span class="tag tag-en">EN</span><br>署名のみ
+        </button>
+        <button class="template-btn" onclick="selectTemplate('signature_jp')" data-ota="all">
+          <span class="tag tag-jp">JP</span><br>署名のみ
+        </button>
+      </div>
+
+      <div style="margin-top:16px">
+        <button class="btn btn-primary" onclick="generateEmail()">メールを作成する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右パネル：出力 -->
+  <div>
+    <div class="panel" style="position:sticky;top:20px">
+      <h2>作成されたメール</h2>
+      <textarea class="output-area" id="outputEmail" placeholder="OTAを選択 → お客様情報を入力 → テンプレートを選んで「メールを作成する」を押してください"></textarea>
+      <button class="btn btn-copy" id="copyBtn" onclick="copyEmail()">メールをコピー</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let selectedTemplate = null;
+let selectedOTA = null;
+
+// ============================
+// OTA選択
+// ============================
+function selectOTA(ota) {
+  selectedOTA = ota;
+  document.querySelectorAll('.ota-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.ota-btn[data-ota="${ota}"]`).classList.add('active');
+
+  const msgs = {
+    booking: 'Booking.com / Agoda 経由 → 決済はOTA側で完了済み',
+    airbnb: 'Airbnb 経由 → 決済はAirbnb側で完了済み',
+    jalan: 'じゃらん 経由 → 現地決済（現金・カード・電子マネー）',
+    hp: '自社HP 経由 → 事前決済（Square）済み ※決済リンク不要',
+    phone: '電話・紹介 → 決済リンク（Square）を送る必要あり'
+  };
+  document.getElementById('otaStatusMsg').textContent = msgs[ota];
+  document.getElementById('otaStatusMsg').style.color = ota === 'phone' ? '#e65100' : '#2e7d32';
+
+  const payFields = document.getElementById('paymentFields');
+  const payNote = document.getElementById('paymentNote');
+  if (ota === 'phone') {
+    payFields.classList.remove('dimmed');
+    payNote.className = 'payment-note need-link';
+    payNote.textContent = '電話・紹介予約のため、Squareの決済リンクを入力してください。';
+  } else if (ota === 'hp') {
+    payFields.classList.remove('dimmed');
+    payNote.className = 'payment-note';
+    payNote.textContent = '自社HP予約 → 事前にSquareで決済済みです。テンプレには決済済みとして反映されます。';
+  } else {
+    payFields.classList.add('dimmed');
+    if (ota === 'jalan') {
+      payNote.className = 'payment-note';
+      payNote.textContent = 'じゃらん → 現地決済です。決済リンクは不要です。';
+    } else {
+      payNote.className = 'payment-note';
+      payNote.textContent = 'OTA経由の予約は事前オンライン決済済みです。決済リンクは不要です。';
+    }
+  }
+
+  filterTemplates(ota);
+
+  selectedTemplate = null;
+  document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active'));
+}
+
+function filterTemplates(ota) {
+  const allBtns = document.querySelectorAll('.template-btn[data-ota]');
+  allBtns.forEach(btn => {
+    const allowedOTAs = btn.getAttribute('data-ota').split(',');
+    if (allowedOTAs.includes('all') || allowedOTAs.includes(ota)) {
+      btn.classList.remove('hidden');
+    } else {
+      btn.classList.add('hidden');
+    }
+  });
+
+  const sections = [
+    { label: 'sec-booking', grid: 'grid-booking' },
+    { label: 'sec-checkin', grid: 'grid-checkin' },
+    { label: 'sec-special', grid: 'grid-special' },
+    { label: 'sec-guide', grid: 'grid-guide' },
+  ];
+  sections.forEach(s => {
+    const grid = document.getElementById(s.grid);
+    const label = document.getElementById(s.label);
+    const visibleBtns = grid.querySelectorAll('.template-btn:not(.hidden)');
+    label.classList.toggle('hidden', visibleBtns.length === 0);
+    grid.style.display = visibleBtns.length === 0 ? 'none' : '';
+  });
+}
+
+function selectTemplate(id) {
+  selectedTemplate = id;
+  document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+
+// ============================
+// ヘルパー関数
+// ============================
+function getVal(id) { return document.getElementById(id).value; }
+
+function formatDateJP(dateStr) {
+  if (!dateStr) return '●月●日';
+  const d = new Date(dateStr);
+  const days = ['日','月','火','水','木','金','土'];
+  return `${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+}
+function formatDateEN(dateStr) {
+  if (!dateStr) return 'Month Day';
+  const d = new Date(dateStr);
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`;
+}
+function formatDateENShort(dateStr) {
+  if (!dateStr) return 'Month Day';
+  const d = new Date(dateStr);
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return `${months[d.getMonth()]} ${d.getDate()}`;
+}
+function formatDateENOrdinal(dateStr) {
+  if (!dateStr) return 'Month Day';
+  const d = new Date(dateStr);
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const day = d.getDate();
+  const suffix = (day === 1 || day === 21 || day === 31) ? 'st' : (day === 2 || day === 22) ? 'nd' : (day === 3 || day === 23) ? 'rd' : 'th';
+  return `${days[d.getDay()]}, ${months[d.getMonth()]} ${day}${suffix}`;
+}
+function formatDateJPPayment(dateStr) {
+  if (!dateStr) return '■月■日（■）';
+  const d = new Date(dateStr);
+  const days = ['日','月','火','水','木','金','土'];
+  return `${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+}
+function formatDateJPFull(dateStr) {
+  if (!dateStr) return '●年●月●日（●）';
+  const d = new Date(dateStr);
+  const days = ['日','月','火','水','木','金','土'];
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+}
+function formatYear(dateStr) {
+  if (!dateStr) return '2026';
+  return new Date(dateStr).getFullYear().toString();
+}
+
+// ============================
+// メール生成
+// ============================
+function generateEmail() {
+  if (!selectedOTA) {
+    alert('予約経路（OTA）を選択してください');
+    return;
+  }
+  if (!selectedTemplate) {
+    alert('テンプレートを選択してください');
+    return;
+  }
+
+  const name = getVal('guestName') || '●●●';
+  const honorific = getVal('honorific');
+  const guests = getVal('guestCount') || '●';
+  const nights = getVal('nightCount') || '●';
+  const room = getVal('roomType') || '●';
+  const ciDate = getVal('checkinDate');
+  const ciTime = getVal('checkinTime') || '●';
+  const price = getVal('totalPrice') || '●●●';
+  const payLink = getVal('paymentLink') || 'https://square.link/u/●●●●';
+  const payDeadline = getVal('paymentDeadline');
+
+  const fullNameJP = name + honorific;
+  const fullNameEN = honorific === '-san' ? `${name}-san` : (honorific === '' ? name : `${name}${honorific}`);
+  const dateJP = formatDateJP(ciDate);
+  const dateEN = formatDateENShort(ciDate);
+  const dateENFull = formatDateEN(ciDate);
+  const dateENOrd = formatDateENOrdinal(ciDate);
+  const payDeadlineJP = formatDateJPPayment(payDeadline);
+  const payDeadlineEN = payDeadline ? formatDateENShort(payDeadline) : 'Payment Deadline';
+  const dateJPFull = formatDateJPFull(ciDate);
+  const year = formatYear(ciDate);
+
+  const needPayLink = (selectedOTA === 'phone');
+
+  const templates = {
+
+// ============================================
+// 予約直後の完全版（英語）- All OTA
+// ============================================
+ota_confirm_en: `Dear ${fullNameEN},
+
+Thank you for choosing Denim Lodge & Nest.
+I'm Hiroko, the manager of the guesthouse.
+
+We have confirmed your reservation:
+
+Room: Room-${room}
+Guests: ${guests} guest${guests > 1 ? 's' : ''}
+Date: ${dateEN} (${nights} night${nights > 1 ? 's' : ''})
+
+● May we ask:
+What time do you plan to arrive at our guesthouse?（Check-in Time: 16:00–20:00）
+
+Our guesthouse is run by a small team, so staff are not available at all times.
+To ensure a smooth check-in for you, could you please let us know your expected arrival time?
+
+Please note that our standard check-in is from 16:00 to 20:00, and we generally do NOT accept early check-in or luggage storage before 16:00.
+
+After check-in, guests may come and go freely at any time via the back entrance, as there is no curfew.
+We appreciate your cooperation in advance.
+
+Below is some information for your stay.
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+🏡Guesthouse Information
+Denim Lodge＆Nest
+TEL: +81-70-5566-2447 (10:00 AM – 8:00 PM)
+Address: 1-9-27 Ajino, Kojima, Kurashiki, Okayama
+WhatsApp/WeChat: +81-80-6646-1098 — Message Hiroko Nakaniwa (Manager) in English, Japanese, or Spanish.
+
+📕House Rules for our guesthouse
+House Rules for Denim Lodge & Nest
+
+🗺️Access
+By Train: Take the JR Seto-Ohashi Line (Marine Liner) from Okayama Station to Kojima Station (approx. 25 mins).
+From Kojima Station: It is a 20-minute walk from the West Exit.
+Map: How to get to our lodge
+
+📖Kojima Guide
+Find everything from local dining and bike rentals to relaxing day-use hot springs.
+Explore Kojima! Our Special Travel Guide
+
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+We look forward to welcoming you soon!
+
+Regards,
+Hiroko
+
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+With love from Kojima🧵
+Hiroko Nakaniwa
+🏡 Denim Lodge Nest
+📍 Address: 1-9-27 Ajino, Kojima,
+Kurashiki, Okayama, Japan
+✉️ Email: nest@denim-style.jp
+📞 Phone: +81-70-5566-2447
+📲 WhatsApp/WeChat: +81-80-6646-1098
+👖 Where stories are stitched into every stay
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ`,
+
+// ============================================
+// 予約直後の完全版（日本語）- All OTA
+// ============================================
+ota_confirm_jp: `${fullNameJP}
+
+倉敷市児島のゲストハウス「Denim Lodge & Nest」の中庭と申します。
+この度はご予約を下さり誠にありがとうございます。
+
+以下にてご予約を承りました。
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+お部屋 Room-${room}
+宿泊人数: ${guests}名様
+チェックイン日：${dateJP}（${nights}泊）
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+
+●宿へのご 到着時間をお知らせください
+当日のご到着時間がわかりましたら、事前にお知らせいただけますでしょうか。
+
+弊宿は少人数で運営しており、スタッフが宿に常駐しておりません。
+${fullNameJP}をお待たせすることなく、スムーズにお迎えする為、ご来館時間を把握しておきたく存じます。
+尚、チェックイン時間は16〜20時で、原則【16時以前のお手荷物預かり・アーリーチェックイン】は
+承っていおりません。予めご理解、ご協力の程よろしくお願いします。
+
+●施設とアメニティ（アメニティ表とハウスルールはこちら）
+トイレ、浴室（シャワーのみ）、簡易キッチンは他のご宿泊者様と共有です。
+
+アメニティは無料と有料があります。
+無料…シャワールームのシャンプー類や共有スペースのドリンク
+有料…フェイスタオル、バスタオル、歯ブラシ、髭剃り
+チェックイン時に必要なものがありましたらお知らせ下さい。アメニティ類のお支払いは当日払いです。
+パジャマはございませんのでご用意ください。
+
+●宿情報とアクセス
+宿名：Denim Lodge & Nest
+住所：岡山県倉敷市児島味野1−9−27
+電話：070-5566-2447（10～20時：岡松）
+アプリ：LINE / WhatsApp / WeChat: 080-6646-1098 (女将：中庭）
+
+JR岡山駅から瀬戸大橋線（マリンライナー）という在来線にのり、25分で児島駅です。
+JR児島駅に到着されましたら西口から徒歩20分程度です。
+
+※お手荷物が重い場合、遅い時間にご到着の場合
+ぜひタクシーをご利用下さい。
+運転手さんに、宿の住所をお伝え頂くか、「国安呉服店（くにやすごふくてん）があったところ」と
+お伝えいただくとスムーズに到着します。
+実際はその建物の宿を曲がった隣が弊宿（Denim Lodge＆Nest）です。
+（小規模な宿の為、運転手さんは弊宿をご存知ない方が多いです）
+
+●お車でお越しの場合
+宿併設の駐輪場はございませんが、近くに駐車場が2カ所ございます。
+以下のいずれかをご利用下さい。
+
+１）ジーンズストリート駐車場
+（10台限定。無料。24時間利用可。野﨑家旧宅の向い。当宿から徒歩2分）
+２）市営第三駐車場
+（多数あり。1日最大500円。24時間利用可。当宿から徒歩4分）
+
+ご不便をおかけしますがよろしくお願いします。
+
+●児島観光ガイド
+宿で作成した児島の飲食店、レンタサイクル、景勝地、日帰り温泉をまとめたガイドです。
+
+その他ご不明な点がございましたら、お気兼ねなくお問合せ下さい。
+お会いできるのを楽しみにしております。
+
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+With love from Kojima🧵
+中庭廣子（なかにわひろこ）
+🏡 Denim Lodge & Nest
+✉️ Email: nest@denim-style.jp
+📱 Phone: 070-5566-2447
+👖 Where stories are stitched into every stay
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ`,
+
+// ============================================
+// 予約直後の完全版（日本語）- 自社予約
+// ============================================
+hp_confirm_jp: (() => {
+  const paySection = needPayLink
+    ? `【事前決済のお願い】
+宿泊料金：${price}円（税込）
+お支払い期限：${payDeadlineJP}
+お支払いリンク： ${payLink}
+
+※キャンセル料について
+・チェックイン日の4日前まで：無料
+・2～3日前：宿泊料の50％
+・前日：宿泊料の80％
+・当日キャンセル
+・無断キャンセル（No Show）：宿泊料の100％`
+    : `【お支払いについて】
+宿泊料金：${price}円（税込）
+事前決済は完了しております。ありがとうございます。
+
+※キャンセル料について
+・チェックイン日の4日前まで：無料
+・2～3日前：宿泊料の50％
+・前日：宿泊料の80％
+・当日キャンセル
+・無断キャンセル（No Show）：宿泊料の100％`;
+
+  return `${fullNameJP}
+
+倉敷市児島のゲストハウス「Denim Lodge & Nest」の中庭（なかにわ）と申します。
+この度は当宿をご予約いただき、誠にありがとうございます。
+
+${year}年のご予約内容は以下の通りです。
+――――――――――――――――
+チェックイン日：${dateJPFull}
+チェックイン時間：${ciTime}
+お部屋：Room-${room}
+ご人数：${guests}名様 ご宿泊：${nights}泊
+――――――――――――――――
+
+以下、当宿のご案内です。 当宿は「ゲストハウス」のため、ホテルや旅館と比べるとアメニティが簡素です。
+ご旅行の準備の際にご一読いただけますと幸いです。
+
+${paySection}
+
+【施設・アメニティについて】
+以下の設備は共有となります。
+トイレ ・浴室（シャワーのみ、バスタブのご利用不可） ・簡易キッチン
+
+アメニティについて：
+・無料：シャワールームのシャンプー類、共有スペースのドリンク類
+・有料：フェイスタオル、バスタオル、歯ブラシ、髭剃りなど（予約不要・当日払い）
+※パジャマのご用意はございませんので、ご持参ください。
+
+【アクセス情報】
+宿名：Denim Lodge & Nest
+住所：岡山県倉敷市児島味野1−9−27（最寄り駅はJR児島駅）
+電話：070-5566-2447（10～20時：岡松）
+アプリ：LINE / WhatsApp / WeChat: 080-6646-1098 (女将：中庭）
+
+＜電車でお越しの場合＞
+・岡山駅から：瀬戸大橋線（マリンライナー）で児島駅まで約25分
+・高松駅から：同じく瀬戸大橋線（マリンライナー）で児島駅まで約30分
+・JR児島駅から：西口より徒歩約20分（タクシー利用で約5分）
+※送迎サービスはございません。
+
+＜お車でお越しの場合＞
+当宿に駐輪場はございませんが、近隣に以下の駐車場がございます。
+
+① ジーンズストリート駐車場（10台／無料／24時間利用可／徒歩約2分）
+https://www.kojima-sanpo.jp/tabisuru/traffic/parking/jeans-street-p.html
+
+② 市営第三駐車場（多数あり／1日最大500円／24時間利用可／徒歩約4分）
+https://www.kojima-sanpo.jp/tabisuru/traffic/parking/shieidaisan-p.html
+
+ご不便をおかけいたしますが、何卒よろしくお願いいたします。
+
+【児島観光情報】
+当宿でまとめたグルメ・観光情報をご案内しております。
+https://docs.google.com/document/d/18grthV4o9RAEIRTpOfcb1drtlgnVxdLTgbCXztnKj1s/edit?tab=t.0
+
+――――――――――――――――――――
+
+その他ご不明な点がございましたら、どうぞお気軽にお問い合わせください。
+お会いできるのを楽しみにしております。
+
+Denim Lodge＆Nest
+中庭
+
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+With love from Kojima🧵
+Hiroko Nakaniwa
+🏡 Denim Lodge Nest
+✉️ Email: nest@denim-style.jp
+📱 Phone: +81-80-6646-1098
+👖 Where stories are stitched into every stay
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ`;
+})(),
+
+// ============================================
+// 予約直後の完全版（英語）- 自社予約
+// ============================================
+hp_confirm_en: (() => {
+  const paySection = needPayLink
+    ? `Please complete the advance credit card payment using the link below.
+The deadline for payment is ${payDeadlineEN}.
+${payLink}
+
+The payment link is displayed in Japanese only, so I've attached the capture described in ENG for your reference.
+We apologize for the inconvenience and appreciate your understanding.
+
+＊Cancellation Policy
+- 3 to 2 days prior: 50% charge
+- 1 day prior: 80% charge
+- Same-day cancellation: 100% charge`
+    : `Your advance credit card payment has been successfully received. Thank you!
+
+＊Cancellation Policy
+- 3 to 2 days prior: 50% charge
+- 1 day prior: 80% charge
+- Same-day cancellation: 100% charge`;
+
+  return `Dear  ${fullNameEN},
+
+Hello, this is Hiroko from Denim Lodge & Nest.
+Thank you for reaching out via our homepage!
+
+We have confirmed your reservation for ${nights} night${nights > 1 ? 's' : ''}, ${guests} guest${guests > 1 ? 's' : ''} in Room-${room} on ${dateENOrd}.
+Here are the details of your reservation:
+
+Date: ${dateENOrd}
+Duration: ${nights} night${nights > 1 ? 's' : ''}
+Guest: ${guests} person${guests > 1 ? 's' : ''}
+Room: Room-${room}
+Total Price: ¥${price} (including tax and service charge)
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+${paySection}
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+
+●From Kojima Station to the guesthouse:
+Our guesthouse is about a 20-minute walk from the West Exit of Kojima Station.
+If you have heavy luggage, we recommend taking a taxi—it takes about 5 minutes and costs around 800－1000 yen.
+
+Since our guesthouse is small, taxi drivers may not recognize the name.
+Instead, please provide them with the address.
+岡山県倉敷市児島味野1−9−27（Address in Japanese)
+
+●If you are arriving by car:
+While our accommodation does not have an attached parking lot, there are two parking options available nearby.
+Please use one of the following:
+
+1：Jeans Street Parking Lot
+This lot offers 10 free spaces and is available 24 hours a day.
+It is located across from the former Nozaki residence and is just a 2-minute walk from our property.
+Details here:https://www.kojima-sanpo.jp/tabisuru/traffic/parking/jeans-street-p.html (JPN)
+
+2：Municipal Third Parking Lot
+This larger facility has many spaces available and charges a maximum of ¥500 per day.
+It is also open 24 hours and is approximately a 4-minute walk from our accommodation.
+Details here:https://www.kojima-sanpo.jp/tabisuru/traffic/parking/shieidaisan-p.html (JPN)
+
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+🏡Guesthouse Information
+Denim Lodge＆Nest
+TEL: +81-70-5566-2447 (10:00 AM – 8:00 PM)
+Address: 1-9-27 Ajino, Kojima, Kurashiki, Okayama
+WhatsApp/WeChat: +81-80-6646-1098 — Message Hiroko Nakaniwa (Manager) in English, Japanese, or Spanish.
+Google Map：https://maps.app.goo.gl/5cLCeYA6kJ9dWbCc9
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+I've created a local guide to Kojima's gourmet spots and sightseeing highlights, just for our guests.
+Gourmet Guide (Kojima,Kurashiki city)　I hope it helps you enjoy your trip even more!
+https://docs.google.com/document/d/18grthV4o9RAEIRTpOfcb1drtlgnVxdLTgbCXztnKj1s/edit?tab=t.0#heading=h.wla0hfio8uir
+
+Warm regards,
+Denim Lodge & Nest
+
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+With love from Kojima🧵
+Hiroko Nakaniwa
+🏡 Denim Lodge Nest
+✉️ Email: nest@denim-style.jp
+📱 Phone: +81-80-6646-1098
+👖 Where stories are stitched into every stay
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ`;
+})(),
+
+// ============================================
+// 駐車場案内だけ（日本語）
+// ============================================
+parking_jp: `${fullNameJP}
+
+Denim Lodge＆Nest 中庭です。
+駐車場についてお問合せ下さりありがとうございます。
+
+当宿併設の駐輪場はございませんが、宿の近くに駐車場が2カ所ございます。
+以下のいずれかをご利用下さい。
+
+１）ジーンズストリート駐車場（10台限定。無料。24時間利用可。野﨑家旧宅の向い。当宿から徒歩2分）
+https://www.kojima-sanpo.jp/tabisuru/traffic/parking/jeans-street-p.html
+
+２）市営第三駐車場（多数あり。1日最大500円。24時間利用可。当宿から徒歩4分）
+https://www.kojima-sanpo.jp/tabisuru/traffic/parking/shieidaisan-p.html
+
+
+宿併設の駐車場がなくご不便をおかけしますが、ご利用ご協力のほどよろしくお願いします。
+
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+With love from Kojima🧵
+中庭廣子（なかにわひろこ）
+🏡 Denim Lodge & Nest
+✉️ Email: nest@denim-style.jp
+📱 Phone: 070-5566-2447
+👖 Where stories are stitched into every stay
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ`,
+
+// ============================================
+// 駐車場案内だけ（英語）
+// ============================================
+parking_en: `Dear ${fullNameEN},
+
+Thank you for your inquiry. Since you are arriving by car, please find the parking information below.
+
+While our accommodation does not have an attached parking lot, there are two parking options available nearby.
+Please use one of the following:
+
+1：Jeans Street Parking Lot
+This lot offers 10 free spaces and is available 24 hours a day.
+It is located across from the former Nozaki residence and is just a 2-minute walk from our property.
+Details here:https://www.kojima-sanpo.jp/tabisuru/traffic/parking/jeans-street-p.html (JPN)
+
+2：Municipal Third Parking Lot
+This larger facility has many spaces available and charges a maximum of ¥500 per day.
+It is also open 24 hours and is approximately a 4-minute walk from our accommodation.
+Details here:https://www.kojima-sanpo.jp/tabisuru/traffic/parking/shieidaisan-p.html (JPN)
+
+Thank you.
+
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+With love from Kojima🧵
+Hiroko Nakaniwa
+🏡 Denim Lodge Nest
+📍 Address: 1-9-27 Ajino, Kojima,
+Kurashiki, Okayama, Japan
+✉️ Email: nest@denim-style.jp
+📞 Phone: +81-70-5566-2447
+📲 WhatsApp/WeChat: +81-80-6646-1098
+👖 Where stories are stitched into every stay
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ`,
+
+// ============================================
+// 直近の到着時間質問（英語）
+// ============================================
+what_time_en: `Dear ${fullNameEN},
+
+Hi, this is Hiroko from Denim Lodge ＆ Nest.
+${dateENOrd} is approaching, and we are getting ready to welcome you!
+
+●A quick question:
+What time do you plan to arrive at our guesthouse?
+The standard check-in time is 4-8 PM.
+
+Since our accommodation is operated by a small team, there may be times when we are away from the property.
+To ensure that you are not kept waiting outside, we would like to be present at the time of your check-in.
+Therefore, we kindly ask that you inform us in advance of your expected arrival time.
+If there is any change to your arrival time after you have contacted us, please let us know as soon as possible.
+We apologize for the inconvenience and appreciate your understanding.
+ｰｰｰｰｰｰｰ
+
+We look forward to hearing from you.
+
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+With love from Kojima🧵
+Hiroko Nakaniwa
+🏡 Denim Lodge Nest
+📍 Address: 1-9-27 Ajino, Kojima,
+Kurashiki, Okayama, Japan
+✉️ Email: nest@denim-style.jp
+📞 Phone: +81-70-5566-2447
+📲 WhatsApp/WeChat: +81-80-6646-1098
+👖 Where stories are stitched into every stay
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ`,
+
+// ============================================
+// 直近の到着時間質問（日本語）
+// ============================================
+what_time_jp: `${fullNameJP}
+
+Denim Lodge＆Nest 中庭です。
+${dateJP}のチェックインが近づいてまいりました。お迎えの準備を進めております。
+
+●ご到着時間についてお尋ねです
+当日、何時頃に宿にご到着されますでしょうか。
+チェックイン時間は16〜20時です。
+
+弊宿は少人数で運営しており、スタッフが宿に常駐しておりません。
+${fullNameJP}をお待たせすることなく、スムーズにお迎えする為、ご到着予定時刻を事前にお知らせいただけますでしょうか。
+ご連絡後に到着時間が変わった場合も、お早めにお知らせいただけますと助かります。
+ご不便をおかけしますが、ご協力の程よろしくお願いいたします。
+ｰｰｰｰｰｰｰ
+
+ご連絡をお待ちしております。
+
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+With love from Kojima🧵
+中庭廣子（なかにわひろこ）
+🏡 Denim Lodge & Nest
+✉️ Email: nest@denim-style.jp
+📱 Phone: 070-5566-2447
+👖 Where stories are stitched into every stay
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ`,
+
+// ============================================
+// Airbnb＆Booking.com：子供泊まれる？（日本語）
+// ============================================
+child_booking_jp: `${fullNameJP}
+
+Denim Lodge & Nestの中庭と申します。
+このたびは「お子様のご宿泊」についてお問い合わせいただき、誠にありがとうございます。
+
+当宿では、3室あるうちの1室「Room-A」でのみ、12歳以下のお子様を含むご予約を受け付けております。
+Room-A以外の部屋は急な階段をのぼった2階にあるため、安全を考慮しRoom-B、Cのお子様のご予約は承っておりません。
+
+以下、お子様のご年齢により、予約方法と料金が異なります。
+【その1】と【その2】のいずれに該当するかをご確認の上、Booking.com（Airbnb）経由か、または
+個別の宛先（nest@denim-style.jp）への連絡した上でのご予約かをご選択ください。
+
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+【その1】お子様が0～6歳の場合
+大人と添い寝であれば宿泊料金は無料です
+→Booking.com（Airbnb）からご予約可能です。大人の人数でご予約下さい。
+お子様は6歳以下ですと添寝に限り無料です。
+
+但し、6歳以下でもお布団を別途ご利用の場合は、大人料金の半額を申し受けます。
+お子様もお布団を個別利用される場合は、Booking.com（Airbnb）経由でご予約できませんので、
+「nest@denim-style.jp」宛にご予約下さい。
+※6歳以下のお子様と、7～12歳のお子様を含む場合は、【その2】の方法でご予約下さい。
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+【その2】お子様が7～12歳の場合
+大人の7割の宿泊料金です
+→Booking.com（Airbnb）では子供料金の個別設定が出来ない為、
+大人料金と同じ料金を請求せざるをえないため、サイト経由のご予約はお勧めしません。
+「nest@denim-style.jp」宛に①～⑥をご記入の上、ご予約の連絡をお願いできますでしょうか。
+
+①宿泊者者名
+②お電話番号
+③チェックイン日
+④チェックイン時間（16～20時の間でお知らせください）
+⑤泊数
+⑥宿泊人数とお子様のご年齢（例：大人2名、10歳1名、4歳1名の合計4名）
+
+ご不便をおかけして申し訳ありませんが、ご協力の程よろしくお願い申し上げます。
+
+
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+With love from Kojima🧵
+中庭廣子（なかにわひろこ）
+🏡 Denim Lodge & Nest
+✉️ Email: nest@denim-style.jp
+📱 Phone: 070-5566-2447
+👖 Where stories are stitched into every stay
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ`,
+
+// ============================================
+// 児島ガイドのみの案内（英語）
+// ============================================
+guide_en: `Dear ${fullNameEN},
+
+Hi there! I hope your journey in Japan is off to a great start.
+To help you make the most of your stay in Kojima, I'd like to share our original travel guide!
+I hope it helps you enjoy your trip even more!
+
+●Kojima Guide
+https://docs.google.com/document/d/18grthV4o9RAEIRTpOfcb1drtlgnVxdLTgbCXztnKj1s/edit?tab=t.0#heading=h.wla0hfio8uir
+
+See you soon!
+
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+With love from Kojima🧵
+Hiroko Nakaniwa
+🏡 Denim Lodge Nest
+📍 Address: 1-9-27 Ajino, Kojima,
+Kurashiki, Okayama, Japan
+✉️ Email: nest@denim-style.jp
+📞 Phone: +81-70-5566-2447
+📲 WhatsApp/WeChat: +81-80-6646-1098
+👖 Where stories are stitched into every stay
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ`,
+
+// ============================================
+// 児島ガイドのみの案内（日本語）
+// ============================================
+guide_jp: `${fullNameJP}へ
+
+こんにちは。
+Denim Lodge＆Nest 中庭です。
+旅の準備は順調でしょうか。
+
+宿泊者のお客様向けに、児島のグルメ、観光スポット、レンタサイクル情報、日帰り温泉等の情報をまとめたガイドを作成しました。旅の参考になれば幸いです。
+
+●児島ガイド
+https://docs.google.com/document/d/18grthV4o9RAEIRTpOfcb1drtlgnVxdLTgbCXztnKj1s/edit?tab=t.0#heading=h.wla0hfio8uir
+
+お会いできるのを楽しみにしております。
+
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+With love from Kojima🧵
+中庭廣子（なかにわひろこ）
+🏡 Denim Lodge & Nest
+✉️ Email: nest@denim-style.jp
+📱 Phone: 070-5566-2447
+👖 Where stories are stitched into every stay
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ`,
+
+// ============================================
+// アーリーチェックイン可能だが掃除がまだ（英語）
+// ============================================
+early_ci_en: `Dear ${fullNameEN},
+
+Thank you very much for your reservation. This is Hiroko from Denim Lodge & Nest.
+We've received your booking for ${guests} guest${guests > 1 ? 's' : ''}, checking in on ${dateEN} for ${nights} night${nights > 1 ? 's' : ''}.
+
+Regarding your preferred check-in time between ${ciTime}—yes, that's perfectly fine.
+However, please note that another guest will be checking out of your room on the same day, so cleaning will not be completed until around 16:00.
+
+Between ${ciTime}, we can take care of the following:
+＊Storing your luggage
+＊Handing over your room key
+＊Providing the back entrance key code
+＊Completing the check-in registration
+
+You'll be able to return after 16:00 to enter your room. In the meantime, you're welcome to relax and use the shared spaces freely.
+We look forward to welcoming you in person! If you have any questions, please feel free to reach out.
+
+Warm regards,
+Hiroko Denim Lodge & Nest`,
+
+// ============================================
+// 署名（英語）
+// ============================================
+signature_en: `ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+With love from Kojima🧵
+Hiroko Nakaniwa
+🏡 Denim Lodge Nest
+📍 Address: 1-9-27 Ajino, Kojima,
+Kurashiki, Okayama, Japan
+✉️ Email: nest@denim-style.jp
+📞 Phone: +81-70-5566-2447
+📲 WhatsApp/WeChat: +81-80-6646-1098
+👖 Where stories are stitched into every stay
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ`,
+
+// ============================================
+// 署名（日本語）
+// ============================================
+signature_jp: `ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ
+With love from Kojima🧵
+中庭廣子（なかにわひろこ）
+🏡 Denim Lodge & Nest
+✉️ Email: nest@denim-style.jp
+📱 Phone: 070-5566-2447
+👖 Where stories are stitched into every stay
+ｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰｰ`,
+
+  };
+
+  const result = templates[selectedTemplate];
+  if (result) {
+    document.getElementById('outputEmail').value = result;
+  } else {
+    document.getElementById('outputEmail').value = 'テンプレートが見つかりません。';
+  }
+}
+
+function copyEmail() {
+  const output = document.getElementById('outputEmail');
+  output.select();
+  navigator.clipboard.writeText(output.value).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'コピーしました！';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'メールをコピー';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+// ============================
+// パスワード認証
+// ============================
+const PASS_HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8';
+
+function unlock() {
+  const input = document.getElementById('lockPassword').value;
+  if (input === 'harenokuni123') {
+    document.getElementById('lockOverlay').classList.add('hidden');
+    document.getElementById('appContent').classList.remove('locked');
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    localStorage.setItem('denim_auth', expires);
+  } else {
+    document.getElementById('lockError').textContent = 'パスワードが違います';
+    document.getElementById('lockPassword').value = '';
+    document.getElementById('lockPassword').focus();
+  }
+}
+
+(function() {
+  const saved = localStorage.getItem('denim_auth');
+  if (saved && new Date(saved) > new Date()) {
+    document.getElementById('lockOverlay').classList.add('hidden');
+    document.getElementById('appContent').classList.remove('locked');
+  }
+})();
+</script>
+
+</div><!-- /app-content -->
+</body>
+</html>
