@@ -475,7 +475,7 @@ body { font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif; backgroun
     <div class="panel" style="position:sticky;top:20px">
       <h2>作成されたメール</h2>
       <textarea class="output-area" id="outputEmail" placeholder="OTAを選択 → お客様情報を入力 → テンプレートを選んで「メールを作成する」を押してください"></textarea>
-      <button class="btn btn-copy" id="copyBtn" onclick="copyEmail()">メールをコピー</button>
+      <button class="btn btn-copy" id="copyBtn" onclick="copyEmail()">メールをコピー（リンク埋め込み）</button>
     </div>
   </div>
 </div>
@@ -1456,17 +1456,129 @@ With love from Kojima🧵
   }
 }
 
+// ============================
+// リッチHTML変換＆コピー
+// ============================
+function convertToRichHTML(text) {
+  const placeholders = [];
+
+  function addLink(url, label) {
+    const token = '\x00LINK' + placeholders.length + '\x00';
+    placeholders.push('<a href="' + url + '" style="color:#1a73e8; text-decoration:underline;">' + label + '</a>');
+    return token;
+  }
+
+  let r = text;
+
+  // --- 特定パターンの置換（周囲のテキストごと） ---
+
+  // JP: 「こちら→ URL」→ リンク化
+  r = r.replace(/こちら→\s*(https:\/\/drive\.google\.com\/\S+)\s*/, function(m, url) {
+    return addLink(url.replace(/\s+$/, ''), 'こちら');
+  });
+
+  // EN: 「House Rules & Amenity List: URL」→ リンク化
+  r = r.replace(/House Rules & Amenity List:\s*(https:\/\/drive\.google\.com\/\S+)/, function(m, url) {
+    return addLink(url.replace(/\s+$/, ''), 'House Rules & Amenity List');
+  });
+
+  // JP/EN: 「Google Map: URL」→ リンク化
+  r = r.replace(/Google Map:\s*(https:\/\/maps\.app\.goo\.gl\/\S+)\s*/, function(m, url) {
+    return addLink(url.replace(/[\s）)]+$/, ''), 'Google Map');
+  });
+  r = r.replace(/Google Map：(https:\/\/maps\.app\.goo\.gl\/\S+)/, function(m, url) {
+    return addLink(url.replace(/\s+$/, ''), 'Google Map');
+  });
+
+  // JP: 「コチラ♪\nURL」→ リンク化
+  r = r.replace(/コチラ♪\n(https:\/\/docs\.google\.com\/\S+)/, function(m, url) {
+    return addLink(url.replace(/\s+$/, ''), 'コチラ♪');
+  });
+
+  // EN: 「Details here:URL (JPN)」→ リンク化
+  r = r.replace(/Details here:(https:\/\/\S+)\s*\(JPN\)/g, function(m, url) {
+    return addLink(url.replace(/\s+$/, ''), 'Details here');
+  });
+
+  // EN: 「Explore Kojima! Our Special Travel Guide\nURL」
+  r = r.replace(/(Explore Kojima! Our Special Travel Guide)\n(https:\/\/\S+)/g, function(m, label, url) {
+    return addLink(url.replace(/\s+$/, ''), label);
+  });
+
+  // EN: 「Gourmet Guide (Kojima,Kurashiki city)...」
+  r = r.replace(/(Gourmet Guide[^\n]*)\n(https:\/\/docs\.google\.com\/\S+)/g, function(m, label, url) {
+    return addLink(url.replace(/\s+$/, ''), label.trim());
+  });
+
+  // 行頭の単独URL → フレンドリーラベルでリンク化
+  r = r.replace(/^(https:\/\/www\.kojima-sanpo\.jp\/\S*jeans-street\S*)$/gm, function(m, url) {
+    return addLink(url.replace(/\s+$/, ''), '駐車場の詳細はこちら');
+  });
+  r = r.replace(/^(https:\/\/www\.kojima-sanpo\.jp\/\S*shieidaisan\S*)$/gm, function(m, url) {
+    return addLink(url.replace(/\s+$/, ''), '駐車場の詳細はこちら');
+  });
+  r = r.replace(/^(https:\/\/docs\.google\.com\/\S+)$/gm, function(m, url) {
+    return addLink(url.replace(/\s+$/, ''), '児島ガイドを見る');
+  });
+
+  // Square決済リンク
+  r = r.replace(/(https:\/\/square\.link\/\S+)/g, function(m, url) {
+    if (url.includes('\x00')) return m;
+    return addLink(url.replace(/\s+$/, ''), 'お支払いはこちら');
+  });
+
+  // キャッチオール: 残ったURLをリンク化
+  r = r.replace(/(https?:\/\/[^\s<>\x00]+)/g, function(m, url) {
+    return addLink(url, url);
+  });
+
+  // HTMLエスケープ（プレースホルダー以外）
+  r = r.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  // プレースホルダーを実際のHTMLリンクに復元
+  placeholders.forEach(function(html, i) {
+    r = r.replace('\x00LINK' + i + '\x00', html);
+  });
+
+  // 改行 → <br>
+  r = r.replace(/\n/g, '<br>\n');
+
+  return '<div style="font-family: sans-serif; font-size: 14px; line-height: 1.7; color: #333;">' + r + '</div>';
+}
+
 function copyEmail() {
   const output = document.getElementById('outputEmail');
-  output.select();
-  navigator.clipboard.writeText(output.value).then(() => {
+  const plainText = output.value;
+  const richHTML = convertToRichHTML(plainText);
+
+  // リッチテキスト（HTML）＋プレーンテキスト両方をクリップボードにコピー
+  const blobHTML = new Blob([richHTML], { type: 'text/html' });
+  const blobText = new Blob([plainText], { type: 'text/plain' });
+
+  navigator.clipboard.write([
+    new ClipboardItem({
+      'text/html': blobHTML,
+      'text/plain': blobText
+    })
+  ]).then(function() {
     const btn = document.getElementById('copyBtn');
-    btn.textContent = 'コピーしました！';
+    btn.textContent = 'コピーしました！（リンク埋め込み済み）';
     btn.classList.add('copied');
-    setTimeout(() => {
-      btn.textContent = 'メールをコピー';
+    setTimeout(function() {
+      btn.textContent = 'メールをコピー（リンク埋め込み）';
       btn.classList.remove('copied');
-    }, 2000);
+    }, 2500);
+  }).catch(function(err) {
+    // フォールバック：プレーンテキストのみコピー
+    navigator.clipboard.writeText(plainText).then(function() {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = 'コピーしました（テキストのみ）';
+      btn.classList.add('copied');
+      setTimeout(function() {
+        btn.textContent = 'メールをコピー（リンク埋め込み）';
+        btn.classList.remove('copied');
+      }, 2500);
+    });
   });
 }
 
