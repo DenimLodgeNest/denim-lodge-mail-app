@@ -283,18 +283,18 @@ body { font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif; backgroun
           <textarea class="prompt-output" id="guestComment" placeholder="例：名古屋から伺います！デニムショップをめぐりたいです。とても楽しみにしております！"></textarea>
         </div>
 
-        <button class="btn-greeting btn-generate-prompt" onclick="generateGreetingPrompt()">🪄 ChatGPT用プロンプトを生成</button>
+        <button class="btn-greeting btn-generate-prompt" onclick="generateGreetingPrompt()">🪄 Gemini用プロンプトを生成</button>
 
         <div class="form-group" style="margin-top:14px">
-          <label>生成されたプロンプト（↓をコピーしてChatGPTに貼り付け）</label>
+          <label>生成されたプロンプト（↓をコピーして <a href="https://gemini.google.com/app" target="_blank" rel="noopener" style="color:#1a73e8; font-weight:700; text-decoration:underline;">Gemini ↗</a> に貼り付け）</label>
           <textarea class="prompt-output" id="greetingPrompt" placeholder="上のボタンを押すとプロンプトが生成されます..." readonly></textarea>
           <button class="btn-greeting btn-copy-prompt" id="copyPromptBtn" onclick="copyGreetingPrompt()">プロンプトをコピー</button>
         </div>
 
         <div class="form-group" style="margin-top:14px">
-          <label>ChatGPTの回答をここに貼り付け</label>
-          <textarea class="greeting-result" id="greetingResult" placeholder="ChatGPTが生成した寄り添い文をここに貼り付けてください..."></textarea>
-          <button class="btn-greeting btn-insert-greeting" onclick="insertGreeting()">📩 メールの冒頭に挿入する</button>
+          <label>Geminiの回答をここに貼り付け</label>
+          <textarea class="greeting-result" id="greetingResult" placeholder="Geminiが生成した寄り添い文をここに貼り付けてください..."></textarea>
+          <button class="btn-greeting btn-insert-greeting" onclick="insertGreeting()">📩 名乗りの後に挿入する</button>
         </div>
       </div>
     </div>
@@ -594,7 +594,7 @@ function copyGreetingPrompt() {
   prompt.select();
   navigator.clipboard.writeText(prompt.value).then(() => {
     const btn = document.getElementById('copyPromptBtn');
-    btn.textContent = 'コピーしました！→ ChatGPTに貼り付けてください';
+    btn.textContent = 'コピーしました！→ Geminiに貼り付けてください';
     btn.classList.add('copied');
     // ステップ更新
     document.getElementById('gStep2').className = 'greeting-step done';
@@ -609,7 +609,7 @@ function copyGreetingPrompt() {
 function insertGreeting() {
   const greeting = document.getElementById('greetingResult').value.trim();
   if (!greeting) {
-    alert('ChatGPTの回答を貼り付けてから押してください');
+    alert('Geminiの回答を貼り付けてから押してください');
     return;
   }
   const output = document.getElementById('outputEmail');
@@ -618,30 +618,26 @@ function insertGreeting() {
     return;
   }
 
-  // タイトル行の後（区切り線の後の本文冒頭）に挿入
+  // ①名前 → ②名乗り（中庭と申します / I'm Hiroko） → ③寄り添い文
+  // 名乗り行（「中庭と申します」or 「ありがとうございます」or "I'm Hiroko"の行）の後に挿入
   const lines = output.value.split('\n');
-  // 区切り線(ｰｰ...)の次の空行の後、名前行の次に挿入
   let insertIdx = -1;
+
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].startsWith('ｰｰｰｰｰｰｰｰｰｰ')) {
-      // タイトル下の区切り線を見つけた。その次の空行の後を探す
-      for (let j = i + 1; j < lines.length; j++) {
-        if (lines[j].trim() !== '') {
-          // 名前行を見つけた。その次の空行の後に挿入
-          for (let k = j + 1; k < lines.length; k++) {
-            if (lines[k].trim() === '') {
-              insertIdx = k + 1;
-              break;
-            }
-          }
-          break;
-        }
+    const line = lines[i];
+    // 日本語：「ありがとうございます。」で終わる名乗り＋お礼の行を探す
+    if (line.includes('ありがとうございます') || line.includes('Thank you for choosing')) {
+      // この行の後の空行の後に挿入
+      insertIdx = i + 1;
+      // 次が空行ならその後に
+      if (i + 1 < lines.length && lines[i + 1].trim() === '') {
+        insertIdx = i + 2;
       }
       break;
     }
   }
 
-  // 見つからなかった場合、最初の空行の後に挿入
+  // 見つからなかった場合：最初の空行の後に挿入
   if (insertIdx === -1) {
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].trim() === '' && i > 0) {
@@ -653,14 +649,14 @@ function insertGreeting() {
 
   if (insertIdx === -1) insertIdx = 2;
 
-  lines.splice(insertIdx, 0, greeting + '\n');
+  lines.splice(insertIdx, 0, '\n' + greeting + '\n');
   output.value = lines.join('\n');
 
   // ステップ更新
   document.getElementById('gStep3').className = 'greeting-step done';
   document.getElementById('gStep4').className = 'greeting-step done';
 
-  alert('寄り添い文をメール冒頭に挿入しました！');
+  alert('寄り添い文を名乗りの後に挿入しました！');
 }
 
 // ============================
