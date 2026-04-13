@@ -155,6 +155,68 @@ body { font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif; backgroun
 /* メインコンテンツ：ログイン前は非表示 */
 .app-content.locked { display: none; }
 
+/* 寄り添いコメント生成パネル */
+.greeting-panel {
+  background: linear-gradient(135deg, #fffef5 0%, #fff9e6 100%);
+  border: 2px solid #f0e6c8;
+}
+.greeting-panel h2 {
+  color: #8b6914;
+  border-bottom-color: #f0e6c8;
+}
+.greeting-toggle {
+  display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+  padding: 12px 16px; background: #fffdf0; border: 2px solid #f0e6c8; border-radius: 10px;
+  margin-bottom: 14px; transition: all 0.2s;
+}
+.greeting-toggle:hover { background: #fff8dc; border-color: #d4b84a; }
+.greeting-toggle .toggle-label { font-size: 14px; font-weight: 600; color: #8b6914; }
+.greeting-toggle .toggle-arrow { font-size: 18px; transition: transform 0.3s; }
+.greeting-toggle .toggle-arrow.open { transform: rotate(180deg); }
+.greeting-body { display: none; }
+.greeting-body.open { display: block; }
+.greeting-steps { display: flex; gap: 6px; margin-bottom: 12px; }
+.greeting-step {
+  flex: 1; text-align: center; padding: 6px 4px; border-radius: 6px;
+  font-size: 11px; font-weight: 600; color: #aaa; background: #f5f5f5;
+}
+.greeting-step.active { background: #fff3cd; color: #8b6914; }
+.greeting-step.done { background: #d4edda; color: #155724; }
+.btn-greeting {
+  padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px;
+  font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%;
+}
+.btn-generate-prompt {
+  background: linear-gradient(135deg, #d4a017, #b8860b); color: white;
+}
+.btn-generate-prompt:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(184,134,11,0.3); }
+.btn-copy-prompt {
+  background: #f0e6c8; color: #8b6914; margin-top: 8px;
+}
+.btn-copy-prompt:hover { background: #e6d4a8; }
+.btn-copy-prompt.copied { background: #4caf50; color: white; }
+.btn-insert-greeting {
+  background: linear-gradient(135deg, #2c5f8a, #1a3a5c); color: white; margin-top: 8px;
+}
+.btn-insert-greeting:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(44,95,138,0.3); }
+.prompt-output {
+  width: 100%; min-height: 120px; padding: 12px; border: 1px solid #e0d5b8;
+  border-radius: 8px; font-size: 13px; line-height: 1.6; background: #fffef9;
+  font-family: inherit; resize: vertical;
+}
+.greeting-result {
+  width: 100%; min-height: 80px; padding: 12px; border: 2px solid #2c5f8a;
+  border-radius: 8px; font-size: 14px; line-height: 1.6; background: #f0f8ff;
+  font-family: inherit; resize: vertical;
+}
+.greeting-lang-btns { display: flex; gap: 6px; margin-bottom: 10px; }
+.lang-btn {
+  padding: 6px 16px; border: 2px solid #e0d5b8; border-radius: 6px;
+  background: white; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s;
+}
+.lang-btn:hover { border-color: #d4a017; }
+.lang-btn.active { border-color: #d4a017; background: #fff3cd; color: #8b6914; }
+
 @media (max-width: 900px) {
   .container { grid-template-columns: 1fr; }
   .template-grid { grid-template-columns: 1fr; }
@@ -192,6 +254,49 @@ body { font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif; backgroun
     <div class="panel" style="margin-bottom:20px">
       <h2>STEP 1: お客様のメール（参考用）</h2>
       <textarea class="customer-email-box" id="customerEmail" placeholder="お客様からのメールをここに貼り付けてください..."></textarea>
+    </div>
+
+    <!-- 寄り添いコメント生成パネル -->
+    <div class="panel greeting-panel" style="margin-bottom:20px">
+      <div class="greeting-toggle" onclick="toggleGreeting()">
+        <span class="toggle-label">✨ 寄り添いコメント生成（お客様のメッセージに合わせた挨拶文）</span>
+        <span class="toggle-arrow" id="greetingArrow">▼</span>
+      </div>
+      <div class="greeting-body" id="greetingBody">
+        <div class="greeting-steps">
+          <div class="greeting-step active" id="gStep1">❶ 言語を選ぶ</div>
+          <div class="greeting-step" id="gStep2">❷ プロンプト生成</div>
+          <div class="greeting-step" id="gStep3">❸ AIの回答を貼る</div>
+          <div class="greeting-step" id="gStep4">❹ メールに挿入</div>
+        </div>
+
+        <div class="form-group">
+          <label>言語を選択</label>
+          <div class="greeting-lang-btns">
+            <button class="lang-btn active" onclick="setGreetingLang('jp')" id="langBtnJP">🇯🇵 日本語</button>
+            <button class="lang-btn" onclick="setGreetingLang('en')" id="langBtnEN">🇬🇧 English</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>お客様のコメント（STEP1から自動取得、または直接入力）</label>
+          <textarea class="prompt-output" id="guestComment" placeholder="例：名古屋から伺います！デニムショップをめぐりたいです。とても楽しみにしております！"></textarea>
+        </div>
+
+        <button class="btn-greeting btn-generate-prompt" onclick="generateGreetingPrompt()">🪄 ChatGPT用プロンプトを生成</button>
+
+        <div class="form-group" style="margin-top:14px">
+          <label>生成されたプロンプト（↓をコピーしてChatGPTに貼り付け）</label>
+          <textarea class="prompt-output" id="greetingPrompt" placeholder="上のボタンを押すとプロンプトが生成されます..." readonly></textarea>
+          <button class="btn-greeting btn-copy-prompt" id="copyPromptBtn" onclick="copyGreetingPrompt()">プロンプトをコピー</button>
+        </div>
+
+        <div class="form-group" style="margin-top:14px">
+          <label>ChatGPTの回答をここに貼り付け</label>
+          <textarea class="greeting-result" id="greetingResult" placeholder="ChatGPTが生成した寄り添い文をここに貼り付けてください..."></textarea>
+          <button class="btn-greeting btn-insert-greeting" onclick="insertGreeting()">📩 メールの冒頭に挿入する</button>
+        </div>
+      </div>
     </div>
 
     <div class="panel" style="margin-bottom:20px">
@@ -378,6 +483,185 @@ body { font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif; backgroun
 <script>
 let selectedTemplate = null;
 let selectedOTA = null;
+let greetingLang = 'jp';
+
+// ============================
+// 寄り添いコメント生成
+// ============================
+function toggleGreeting() {
+  const body = document.getElementById('greetingBody');
+  const arrow = document.getElementById('greetingArrow');
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+  // STEP1のコメントを自動取得
+  if (body.classList.contains('open')) {
+    const custEmail = document.getElementById('customerEmail').value.trim();
+    const guestComment = document.getElementById('guestComment');
+    if (custEmail && !guestComment.value.trim()) {
+      guestComment.value = custEmail;
+    }
+  }
+}
+
+function setGreetingLang(lang) {
+  greetingLang = lang;
+  document.getElementById('langBtnJP').classList.toggle('active', lang === 'jp');
+  document.getElementById('langBtnEN').classList.toggle('active', lang === 'en');
+}
+
+function getSeasonJP(dateStr) {
+  const m = dateStr ? new Date(dateStr).getMonth() + 1 : new Date().getMonth() + 1;
+  if (m >= 3 && m <= 5) return '春（' + m + '月）。暖かく散策日和です';
+  if (m >= 6 && m <= 8) return '夏（' + m + '月）。瀬戸内の海が美しい季節です';
+  if (m >= 9 && m <= 11) return '秋（' + m + '月）。過ごしやすく街歩きに最適です';
+  return '冬（' + m + '月）。澄んだ空気の中、落ち着いた児島を楽しめます';
+}
+
+function getSeasonEN(dateStr) {
+  const m = dateStr ? new Date(dateStr).getMonth() + 1 : new Date().getMonth() + 1;
+  if (m >= 3 && m <= 5) return 'spring (Month: ' + m + '). Warm and perfect for strolling';
+  if (m >= 6 && m <= 8) return 'summer (Month: ' + m + '). The Seto Inland Sea is beautiful this time of year';
+  if (m >= 9 && m <= 11) return 'autumn (Month: ' + m + '). Comfortable weather, ideal for exploring the town';
+  return 'winter (Month: ' + m + '). Crisp air and a peaceful Kojima atmosphere';
+}
+
+function generateGreetingPrompt() {
+  const comment = document.getElementById('guestComment').value.trim();
+  const name = document.getElementById('guestName').value || '●●●';
+  const honorific = document.getElementById('honorific').value;
+  const ciDate = document.getElementById('checkinDate').value;
+  const origin = document.getElementById('guestOrigin').value;
+  const dateStr = ciDate ? formatDateJP(ciDate) : '●月●日';
+  const dateStrEN = ciDate ? formatDateENShort(ciDate) : 'the check-in date';
+
+  let prompt = '';
+
+  if (greetingLang === 'jp') {
+    const season = getSeasonJP(ciDate);
+    prompt = `あなたは岡山県倉敷市児島にあるゲストハウス「Denim Lodge & Nest」の女将です。
+お客様から予約時にいただいたコメントに対して、寄り添う挨拶文（2〜4文）を書いてください。
+
+【ルール】
+・宿の女将として温かみのある丁寧な日本語で書く
+・お客様のコメント内容に具体的に触れる
+・チェックイン日の季節感を盛り込む（現在の季節：${season}）
+・児島の魅力（ジーンズストリート、瀬戸内海の景色、地元グルメなど）に軽く触れてOK
+・大袈裟にしすぎず、自然体で
+・冒頭の宛名や署名は不要（メール本文の途中に挿入するため）
+・2〜4文にまとめる
+
+【お客様情報】
+・お名前：${name}${honorific}
+・チェックイン日：${dateStr}
+・出発地：${origin || '不明'}
+
+【お客様のコメント】
+${comment || '（コメントなし — 季節と児島の魅力に触れた一般的な歓迎の挨拶を書いてください）'}`;
+  } else {
+    const season = getSeasonEN(ciDate);
+    prompt = `You are the owner of a guesthouse called "Denim Lodge & Nest" in Kojima, Kurashiki, Okayama, Japan.
+Write a warm, personalized greeting (2-4 sentences) in response to a guest's booking comment.
+
+【Rules】
+- Write in warm, natural English as the guesthouse owner
+- Specifically reference what the guest mentioned in their comment
+- Include a seasonal touch (current season: ${season})
+- You may lightly mention Kojima's charm (Jeans Street, Seto Inland Sea views, local food, etc.)
+- Keep it genuine and not over-the-top
+- Do NOT include salutation (Dear...) or signature — this will be inserted into the middle of an email
+- Keep it to 2-4 sentences
+
+【Guest Info】
+- Name: ${name}
+- Check-in date: ${dateStrEN}
+- Traveling from: ${origin || 'Unknown'}
+
+【Guest's Comment】
+${comment || '(No comment provided — write a general welcoming greeting touching on the season and Kojima charm)'}`;
+  }
+
+  document.getElementById('greetingPrompt').value = prompt;
+
+  // ステップ表示更新
+  document.getElementById('gStep1').className = 'greeting-step done';
+  document.getElementById('gStep2').className = 'greeting-step active';
+  document.getElementById('gStep3').className = 'greeting-step';
+  document.getElementById('gStep4').className = 'greeting-step';
+}
+
+function copyGreetingPrompt() {
+  const prompt = document.getElementById('greetingPrompt');
+  prompt.select();
+  navigator.clipboard.writeText(prompt.value).then(() => {
+    const btn = document.getElementById('copyPromptBtn');
+    btn.textContent = 'コピーしました！→ ChatGPTに貼り付けてください';
+    btn.classList.add('copied');
+    // ステップ更新
+    document.getElementById('gStep2').className = 'greeting-step done';
+    document.getElementById('gStep3').className = 'greeting-step active';
+    setTimeout(() => {
+      btn.textContent = 'プロンプトをコピー';
+      btn.classList.remove('copied');
+    }, 3000);
+  });
+}
+
+function insertGreeting() {
+  const greeting = document.getElementById('greetingResult').value.trim();
+  if (!greeting) {
+    alert('ChatGPTの回答を貼り付けてから押してください');
+    return;
+  }
+  const output = document.getElementById('outputEmail');
+  if (!output.value.trim()) {
+    alert('先にSTEP 2〜4でメールを作成してから挿入してください');
+    return;
+  }
+
+  // タイトル行の後（区切り線の後の本文冒頭）に挿入
+  const lines = output.value.split('\n');
+  // 区切り線(ｰｰ...)の次の空行の後、名前行の次に挿入
+  let insertIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].startsWith('ｰｰｰｰｰｰｰｰｰｰ')) {
+      // タイトル下の区切り線を見つけた。その次の空行の後を探す
+      for (let j = i + 1; j < lines.length; j++) {
+        if (lines[j].trim() !== '') {
+          // 名前行を見つけた。その次の空行の後に挿入
+          for (let k = j + 1; k < lines.length; k++) {
+            if (lines[k].trim() === '') {
+              insertIdx = k + 1;
+              break;
+            }
+          }
+          break;
+        }
+      }
+      break;
+    }
+  }
+
+  // 見つからなかった場合、最初の空行の後に挿入
+  if (insertIdx === -1) {
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].trim() === '' && i > 0) {
+        insertIdx = i + 1;
+        break;
+      }
+    }
+  }
+
+  if (insertIdx === -1) insertIdx = 2;
+
+  lines.splice(insertIdx, 0, greeting + '\n');
+  output.value = lines.join('\n');
+
+  // ステップ更新
+  document.getElementById('gStep3').className = 'greeting-step done';
+  document.getElementById('gStep4').className = 'greeting-step done';
+
+  alert('寄り添い文をメール冒頭に挿入しました！');
+}
 
 // ============================
 // OTA選択
