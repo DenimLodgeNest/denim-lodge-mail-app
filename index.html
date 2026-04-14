@@ -623,11 +623,10 @@ function insertGreeting() {
     const line = lines[i];
     // 名乗り行を探す（中庭/Hiroko の自己紹介行）
     if (line.includes('中庭と申します') || line.includes('中庭（なかにわ）と申します') || line.includes("I'm Hiroko") || line.includes("this is Hiroko") || line.includes("This is Hiroko")) {
-      // この行の後に挿入
+      // 名乗り行の後の空行をスキップして挿入位置を決定
       insertIdx = i + 1;
-      // 次が空行ならその後に
-      if (i + 1 < lines.length && lines[i + 1].trim() === '') {
-        insertIdx = i + 2;
+      while (insertIdx < lines.length && lines[insertIdx].trim() === '') {
+        insertIdx++;
       }
       break;
     }
@@ -645,7 +644,8 @@ function insertGreeting() {
 
   if (insertIdx === -1) insertIdx = 2;
 
-  lines.splice(insertIdx, 0, '\n' + greeting + '\n');
+  // 空行1つ + 寄り添い文 + 空行1つ で挿入
+  lines.splice(insertIdx, 0, greeting, '');
   output.value = lines.join('\n');
 
   // ステップ更新
