@@ -1564,6 +1564,9 @@ function convertToRichHTML(text) {
     r = r.replace('\x00LINK' + i + '\x00', html);
   });
 
+  // ●見出し行を太字に（日本語＆英語）
+  r = r.replace(/^(●.+)$/gm, '<b>$1</b>');
+
   // 改行 → <br>
   r = r.replace(/\n/g, '<br>\n');
 
