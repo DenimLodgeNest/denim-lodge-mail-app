@@ -618,6 +618,20 @@ function insertGreeting() {
     return;
   }
 
+  // メール本文の言語と寄り添い文の言語が合っているかチェック
+  const emailIsEN = selectedTemplate && selectedTemplate.endsWith('_en');
+  const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(greeting);
+  if (emailIsEN && hasJapanese) {
+    if (!confirm('メール本文は英語ですが、寄り添い文が日本語のようです。\n\n英語で再生成しますか？\n→「OK」で言語を英語に切替えます（プロンプトを再生成してください）\n→「キャンセル」でこのまま挿入します')) {
+      // そのまま挿入を続行
+    } else {
+      setGreetingLang('en');
+      generateGreetingPrompt();
+      alert('英語に切替えました。プロンプトをコピーしてGeminiで再生成してください。');
+      return;
+    }
+  }
+
   // ①名前 → ②名乗り（中庭と申します / I'm Hiroko） → ③寄り添い文
   // 名乗り行（「中庭と申します」or 「ありがとうございます」or "I'm Hiroko"の行）の後に挿入
   const lines = output.value.split('\n');
@@ -1475,6 +1489,12 @@ With love from Kojima🧵
   const result = templates[selectedTemplate];
   if (result) {
     document.getElementById('outputEmail').value = result;
+    // テンプレの言語に合わせて寄り添いコメントの言語を自動切替
+    if (selectedTemplate.endsWith('_en')) {
+      setGreetingLang('en');
+    } else if (selectedTemplate.endsWith('_jp')) {
+      setGreetingLang('jp');
+    }
   } else {
     document.getElementById('outputEmail').value = 'テンプレートが見つかりません。';
   }
