@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Denim Lodge & Nest - Instagram投稿作成</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif; background: #faf8f5; color: #333; }
+
+.header {
+  background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+  color: white; padding: 20px 30px; display: flex; align-items: center; gap: 15px;
+}
+.header h1 { font-size: 20px; font-weight: 600; }
+.header .subtitle { font-size: 13px; opacity: 0.9; margin-top: 3px; }
+
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.panel {
+  background: white; border-radius: 12px; padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.panel h2 {
+  font-size: 16px; color: #833ab4; margin-bottom: 16px;
+  padding-bottom: 8px; border-bottom: 2px solid #f0e0f5;
+}
+
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;
+  font-size: 14px; transition: border-color 0.2s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none; border-color: #833ab4; box-shadow: 0 0 0 3px rgba(131,58,180,0.1);
+}
+.form-group textarea { resize: vertical; min-height: 100px; font-family: inherit; line-height: 1.6; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.btn {
+  padding: 12px 24px; border: none; border-radius: 8px; font-size: 15px;
+  font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); color: white;
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(131,58,180,0.3); }
+.btn-copy {
+  background: #f0e0f5; color: #833ab4; margin-top: 10px;
+}
+.btn-copy:hover { background: #e0c8ed; }
+.btn-copy.copied { background: #4caf50; color: white; }
+
+.btn-gemini {
+  background: linear-gradient(135deg, #4285f4, #34a853); color: white; margin-top: 8px;
+}
+.btn-gemini:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(66,133,244,0.3); }
+
+.output-area {
+  width: 100%; min-height: 500px; padding: 16px; border: 1px solid #ddd;
+  border-radius: 8px; font-size: 14px; line-height: 1.7; white-space: pre-wrap;
+  word-wrap: break-word; background: #fafaf8; font-family: inherit;
+  resize: vertical;
+}
+
+.prompt-area {
+  width: 100%; min-height: 150px; padding: 12px; border: 1px solid #e0d5f0;
+  border-radius: 8px; font-size: 13px; line-height: 1.5; background: #faf5ff;
+  font-family: inherit; resize: vertical;
+}
+
+.photo-upload-area {
+  border: 2px dashed #ccc; border-radius: 12px; padding: 20px;
+  text-align: center; cursor: pointer; transition: all 0.2s;
+  background: #fefefe; min-height: 120px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.photo-upload-area:hover { border-color: #833ab4; background: #faf5ff; }
+.photo-upload-area.has-photo { padding: 10px; }
+.photo-upload-area img {
+  max-width: 100%; max-height: 300px; border-radius: 8px; object-fit: cover;
+}
+.photo-upload-area .upload-label { font-size: 14px; color: #888; margin-top: 8px; }
+
+.info-note {
+  background: #fff3e0; border-left: 4px solid #ff9800; padding: 10px 14px;
+  border-radius: 0 8px 8px 0; font-size: 12px; margin-bottom: 14px; line-height: 1.5;
+}
+
+.step-label {
+  display: inline-block; background: linear-gradient(135deg, #833ab4, #fd1d1d);
+  color: white; padding: 2px 10px; border-radius: 12px; font-size: 11px;
+  font-weight: 600; margin-bottom: 8px;
+}
+
+.gemini-link {
+  color: #1a73e8; font-weight: 700; text-decoration: underline;
+}
+
+.char-count {
+  font-size: 11px; color: #888; text-align: right; margin-top: 4px;
+}
+.char-count.over { color: #c62828; font-weight: 600; }
+
+/* パスワード画面 */
+.lock-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.lock-overlay.hidden { display: none; }
+.lock-box {
+  background: white; border-radius: 16px; padding: 40px 36px; text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 400px; width: 90%;
+}
+.lock-box .lock-icon { font-size: 48px; margin-bottom: 12px; }
+.lock-box h2 { font-size: 20px; color: #833ab4; margin-bottom: 6px; }
+.lock-box .lock-sub { font-size: 13px; color: #888; margin-bottom: 20px; }
+.lock-box input {
+  width: 100%; padding: 12px 16px; border: 2px solid #ddd; border-radius: 8px;
+  font-size: 16px; text-align: center; letter-spacing: 2px;
+}
+.lock-box input:focus { outline: none; border-color: #833ab4; }
+.lock-box .lock-btn {
+  width: 100%; padding: 12px; margin-top: 12px; border: none; border-radius: 8px;
+  background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); color: white;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.lock-box .lock-error { color: #c62828; font-size: 13px; margin-top: 10px; min-height: 20px; }
+
+.app-content.locked { display: none; }
+
+.footer-preview {
+  background: #f5f0fa; border: 1px solid #e0d5f0; border-radius: 8px;
+  padding: 12px; font-size: 11px; line-height: 1.5; color: #666;
+  margin-top: 10px; white-space: pre-wrap; max-height: 150px; overflow-y: auto;
+}
+
+@media (max-width: 900px) {
+  .container { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- パスワード画面 -->
+<div class="lock-overlay" id="lockOverlay">
+  <div class="lock-box">
+    <div class="lock-icon">📸</div>
+    <h2>Denim Lodge & Nest</h2>
+    <div class="lock-sub">Instagram投稿作成アプリ</div>
+    <input type="password" id="lockPassword" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter') unlock()">
+    <button class="lock-btn" onclick="unlock()">ログイン</button>
+    <div class="lock-error" id="lockError"></div>
+  </div>
+</div>
+
+<!-- メインコンテンツ -->
+<div class="app-content locked" id="appContent">
+
+<div class="header">
+  <div>
+    <h1>📸 Denim Lodge & Nest - Instagram投稿作成</h1>
+    <div class="subtitle">お客様紹介コーナーの投稿文を自動作成</div>
+  </div>
+</div>
+
+<div class="container">
+  <!-- 左パネル：入力 -->
+  <div>
+    <div class="panel" style="margin-bottom:20px">
+      <h2>STEP 1: 素材を入力</h2>
+
+      <div class="form-group">
+        <label>📸 お客様との写真（文章作成の参考用）</label>
+        <div class="photo-upload-area" id="photoArea" onclick="document.getElementById('photoInput').click()">
+          <div id="photoPlaceholder">
+            <div style="font-size:32px;">📷</div>
+            <div class="upload-label">クリックして写真をアップロード</div>
+          </div>
+          <img id="photoPreview" style="display:none;">
+        </div>
+        <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="previewPhoto(this)">
+      </div>
+
+      <div class="form-group">
+        <label>📝 お客様とのエピソード（箇条書きでOK）</label>
+        <textarea id="episode" rows="6" placeholder="例：&#10;・LAから来たカップル、ハネムーンで日本旅行中&#10;・ジーンズストリートでお気に入りの一着を見つけて大喜び&#10;・チェックアウト時にスケッチブックにイラストを描いてくれた&#10;・とても優しくて温かいオーラのお二人"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>📱 お客様のInstagram（任意）</label>
+          <input type="text" id="guestInsta" placeholder="例: @dakota_travels">
+        </div>
+        <div class="form-group">
+          <label>🌍 お客様の出身地</label>
+          <input type="text" id="guestOrigin" placeholder="例: LA / 東京 / スペイン">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>👥 お客様の人数・関係</label>
+          <input type="text" id="guestRelation" placeholder="例: 友人2人組 / カップル / 家族3人">
+        </div>
+        <div class="form-group">
+          <label>📅 投稿予定日</label>
+          <input type="date" id="postDate">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>💬 なかにーの冒頭トーク（任意：最近の出来事、気分など）</label>
+        <textarea id="openingTalk" rows="3" placeholder="例：最近映画を観た、風邪ひいた、季節の変わり目の話 など（空欄ならGeminiにおまかせ）"></textarea>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:20px">
+      <h2>STEP 2: Geminiでイベント＋投稿文を生成</h2>
+
+      <div class="info-note">
+        💡 プロンプトを生成 → コピー → <a href="https://gemini.google.com/app" target="_blank" rel="noopener" class="gemini-link">Gemini ↗</a> に貼り付け → 回答をSTEP 3に貼り付け
+      </div>
+
+      <button class="btn btn-primary" onclick="generatePrompt()">🪄 Gemini用プロンプトを生成</button>
+
+      <div class="form-group" style="margin-top:14px">
+        <label>生成されたプロンプト（↓をコピーして <a href="https://gemini.google.com/app" target="_blank" rel="noopener" class="gemini-link">Gemini ↗</a> に貼り付け）</label>
+        <textarea class="prompt-area" id="promptOutput" placeholder="上のボタンを押すとプロンプトが生成されます..." readonly></textarea>
+        <button class="btn btn-copy" id="copyPromptBtn" onclick="copyPrompt()">プロンプトをコピー</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>STEP 3: Geminiの回答を貼り付け</h2>
+      <div class="form-group">
+        <label>Geminiが生成した投稿文をここに貼り付け</label>
+        <textarea class="prompt-area" id="geminiResult" rows="8" placeholder="Geminiの回答をここに貼り付けてください..." onchange="assemblePost()" oninput="assemblePost()"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="assemblePost()">📝 投稿文を組み立てる</button>
+    </div>
+  </div>
+
+  <!-- 右パネル：出力 -->
+  <div>
+    <div class="panel" style="position:sticky;top:20px">
+      <h2>完成した投稿文</h2>
+      <textarea class="output-area" id="outputPost" placeholder="STEP 1〜3を進めると、ここに投稿文が表示されます"></textarea>
+      <div class="char-count" id="charCount">0 / 2,200文字</div>
+      <button class="btn btn-copy" id="copyPostBtn" onclick="copyPost()">投稿文をコピー</button>
+
+      <div class="footer-preview" id="footerPreview">
+◤￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣
+＼ジーンズストリート唯一のゲストハウス／
+　　　 🏠 Denim Lodge Nest👖
+...（フッターは自動で付きます）</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app-content -->
+
+<script>
+// 今日の日付をデフォルトに
+document.getElementById('postDate').valueAsDate = new Date();
+
+// ============================
+// 写真プレビュー
+// ============================
+function previewPhoto(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = document.getElementById('photoPreview');
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      document.getElementById('photoPlaceholder').style.display = 'none';
+      document.getElementById('photoArea').classList.add('has-photo');
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+// ============================
+// フッターテンプレ
+// ============================
+const FOOTER = `◤￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣
+＼ジーンズストリート唯一のゲストハウス／
+　　　 🏠 Denim Lodge Nest👖
+
+デニム、ジーンズと塩グルメの街、岡山県倉敷市児島。2025年3月8日に誕生したジーンズストリート唯一のゲストハウスです。
+
+☑ゲストハウスとは？
+ホテルより手ごろな価格で泊まれる簡易的な設備のお宿。
+「トイレ・シャワー・キッチン」は他宿泊者の皆さまと共有。
+宿スタッフ、宿泊者同士の交流もあり、アットホームな雰囲気♪
+
+☑全室個室（ドミトリーなし）
+3室だけの小さな古民家。宿泊人数は1部屋最大3名
+Check-in:16:00~21:00
+Check-out:~10:00
+
+☑宿泊料金
+1名1室1泊：5,060円～12,672円（2名以上から料金×人数）
+※繁忙時期・週末・平日、部屋により料金異なる
+
+☑アクセス
+JR児島駅から徒歩20分（岡山駅→児島駅🚃25分）
+📍〒711-0913 岡山県倉敷市児島味野1丁目9−27
+☎ 070-5566-2447
+
+☑予約・お問合せ
+https://denim-style.jp/nest/
+＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿◢
+
+#デニムロッジネスト #児島 #倉敷 #岡山 #児島ジーンズストリート #kojima #kurashiki #okayama #jeansstreet #デニム #ジーンズ #japan #japandenim #ジーンズストリートスナップ #denimlodgenest #デニムロッジネスト #ゲストハウス #guesthouse #児島塩グルメとジーンズ #瀬戸内の旅 #児島ゲストハウス`;
+
+// ============================
+// Geminiプロンプト生成
+// ============================
+function generatePrompt() {
+  const episode = document.getElementById('episode').value.trim();
+  const guestInsta = document.getElementById('guestInsta').value.trim();
+  const guestOrigin = document.getElementById('guestOrigin').value.trim();
+  const guestRelation = document.getElementById('guestRelation').value.trim();
+  const postDate = document.getElementById('postDate').value;
+  const openingTalk = document.getElementById('openingTalk').value.trim();
+
+  const d = postDate ? new Date(postDate) : new Date();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const year = d.getFullYear();
+
+  // 1週間後〜1ヶ月後の日付
+  const weekLater = new Date(d); weekLater.setDate(weekLater.getDate() + 7);
+  const monthLater = new Date(d); monthLater.setMonth(monthLater.getMonth() + 1);
+  const wStr = `${weekLater.getFullYear()}/${weekLater.getMonth()+1}/${weekLater.getDate()}`;
+  const mStr = `${monthLater.getFullYear()}/${monthLater.getMonth()+1}/${monthLater.getDate()}`;
+
+  const prompt = `あなたはInstagramの投稿文ライターです。
+以下の指示に従い、ゲストハウス「Denim Lodge & Nest」の女将「なかにー」として、お客様紹介コーナーのInstagram投稿文を作成してください。
+
+━━━━━━━━━━━━━━━━━━
+【投稿文の構成ルール】
+━━━━━━━━━━━━━━━━━━
+
+投稿文は以下の3パートで構成してください。フッター（宿情報・ハッシュタグ）はこちらで付けるので不要です。
+
+■パート1：冒頭の挨拶＋イベント紹介
+・「.」を3行（Instagramの「続きを読む」対策）→ 改行後に本文開始
+・最初の1行は必ず「ゲストハウス・Denim Lodge & Nest女将のなかにーです😊」
+・その後、なかにーの個人的な近況や季節の話題をフランクに書く${openingTalk ? '（以下のネタを使ってください：' + openingTalk + '）' : '（投稿日の季節感に合った話題を自由に）'}
+・続けて、児島・倉敷エリアの直近イベントを1〜2個紹介
+  → ウェブ検索で${wStr}〜${mStr}頃に開催されるイベントを探してください
+  → 「倉敷 イベント」「児島 イベント」「岡山 祭り ${month}月」等で検索
+  → イベント名、日程、場所、簡単な説明を添えて
+  → 「ぜひ遊びに来てね」的な誘い文句で締める
+  → もし良いイベントが見つからなければ、季節の魅力だけでOK
+
+■パート2：お客様紹介（メイン）
+・「さて、ご宿泊のお客様紹介コーナー」的な導入から始める
+・お客様のエピソードを、なかにーの文体で温かく綴る
+・お客様の人間性や交流のエピソードを具体的に描写
+・デニムやジーンズストリート、児島の魅力に絡められれば絡める${guestInsta ? '\n・投稿文の中で自然に' + guestInsta + 'さんに触れる（タグ付けや紹介）' : ''}
+
+■パート3：締めの言葉
+・読者への語りかけ（「皆さんも〜してみませんか？」的な）
+・「今日もご一読下さりありがとうございました！」で締める
+
+━━━━━━━━━━━━━━━━━━
+【なかにーの文体ルール】
+━━━━━━━━━━━━━━━━━━
+・一人称は「私」
+・絵文字を適度に使う（使いすぎない。1段落に1〜2個程度）
+・「ですね」「ましたね」など柔らかい語尾
+・フランクだけど品がある。友達に話すような口調
+・時々、名言や諺を引用する
+・お客様への愛情と敬意が伝わるように
+・改行多め（Instagramで読みやすいように）
+・全体で800〜1500文字程度（フッター除く）
+
+━━━━━━━━━━━━━━━━━━
+【今回のお客様情報】
+━━━━━━━━━━━━━━━━━━
+・投稿日：${year}年${month}月${day}日
+・お客様：${guestRelation || '（未入力）'}
+・出身地：${guestOrigin || '（未入力）'}
+${guestInsta ? '・Instagram：' + guestInsta : ''}
+・エピソード：
+${episode || '（未入力 — 写真の雰囲気から想像してフレンドリーな紹介文を書いてください）'}
+
+━━━━━━━━━━━━━━━━━━
+【参考：過去の投稿文（文体の見本）】
+━━━━━━━━━━━━━━━━━━
+
+＜見本1＞
+こんにちはー！
+先日、映画『爆弾』を観てきました💣
+主演の佐藤二朗さんの、狂気すら感じる圧倒的な演技に、ただただ圧倒されてしまいました……！
+（中略）
+さて、今回の宿泊のお客様は、笑顔が可愛いらしいこのお二方😊普段は東京でお仕事をされている職場の同僚同士。
+大好きなデニムを求めて児島に2泊してくださいました👖
+チェックアウトの時、お気に入りのデニムが見つかった報告をしてくれたお二人の嬉しそうな顔🫶🌈
+皆さんも、日常をちょっと特別にしてくれる一着を探しに児島へ旅してみませんか？
+
+＜見本2＞
+ご無沙汰してます！皆さん、お元気ですか？
+私は先日5年ぶりに風邪をひきまして、2日ほど熱にうなされました。
+（中略）
+写真の可愛くておしゃれなお二方は、スペインのマドリッドからお越しのお客様🇪🇸なんと新婚旅行だそうです❣️
+（中略）
+きっと同じ街に住んでいたらこのお客様と友達になれたろうなぁと思います👍
+旅をしている時と同じような「束の間の価値のある交流」が出来た夜でした💎
+
+＜見本3＞
+10月に入り、ありがたいことに満室になる日が多いネストです。
+予約のメールが届くと、どんな人なのだろう？何を楽しみに児島に来てくれるんだろう？と空想の旅が始まります。
+（中略）
+【アフリカの部族の諺】
+〜If you want to go fast, go alone. If you want to go far, go together.〜
+訳:早く行きたければ一人で行け。遠くまで行きたければみんなで行け。
+さぁ、あなたはどうする？`;
+
+  document.getElementById('promptOutput').value = prompt;
+}
+
+function copyPrompt() {
+  const prompt = document.getElementById('promptOutput');
+  prompt.select();
+  navigator.clipboard.writeText(prompt.value).then(function() {
+    const btn = document.getElementById('copyPromptBtn');
+    btn.textContent = 'コピーしました！→ Geminiに貼り付けてください';
+    btn.classList.add('copied');
+    setTimeout(function() {
+      btn.textContent = 'プロンプトをコピー';
+      btn.classList.remove('copied');
+    }, 3000);
+  });
+}
+
+// ============================
+// 投稿文の組み立て
+// ============================
+function assemblePost() {
+  const geminiResult = document.getElementById('geminiResult').value.trim();
+  if (!geminiResult) {
+    document.getElementById('outputPost').value = '';
+    updateCharCount();
+    return;
+  }
+
+  // Geminiの出力 + フッター
+  const fullPost = geminiResult + '\n\n' + FOOTER;
+  document.getElementById('outputPost').value = fullPost;
+  updateCharCount();
+}
+
+function updateCharCount() {
+  const text = document.getElementById('outputPost').value;
+  const count = text.length;
+  const el = document.getElementById('charCount');
+  el.textContent = count.toLocaleString() + ' / 2,200文字';
+  el.className = count > 2200 ? 'char-count over' : 'char-count';
+}
+
+function copyPost() {
+  const output = document.getElementById('outputPost');
+  output.select();
+  navigator.clipboard.writeText(output.value).then(function() {
+    const btn = document.getElementById('copyPostBtn');
+    btn.textContent = 'コピーしました！';
+    btn.classList.add('copied');
+    setTimeout(function() {
+      btn.textContent = '投稿文をコピー';
+      btn.classList.remove('copied');
+    }, 2500);
+  });
+}
+
+// ============================
+// パスワード認証
+// ============================
+function unlock() {
+  const input = document.getElementById('lockPassword').value;
+  if (input === 'harenokuni123') {
+    document.getElementById('lockOverlay').classList.add('hidden');
+    document.getElementById('appContent').classList.remove('locked');
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    localStorage.setItem('denim_insta_auth', expires);
+  } else {
+    document.getElementById('lockError').textContent = 'パスワードが違います';
+    document.getElementById('lockPassword').value = '';
+    document.getElementById('lockPassword').focus();
+  }
+}
+
+(function() {
+  const saved = localStorage.getItem('denim_insta_auth');
+  if (saved && new Date(saved) > new Date()) {
+    document.getElementById('lockOverlay').classList.add('hidden');
+    document.getElementById('appContent').classList.remove('locked');
+  }
+})();
+</script>
+
+</body>
+</html>
