@@ -814,6 +814,10 @@ function generateEmail() {
   }
 
   const name = getVal('guestName') || '●●●';
+  // 英語テンプレ選択時は敬称を自動で -san に切替
+  if (selectedTemplate.endsWith('_en') && getVal('honorific') === '様') {
+    document.getElementById('honorific').value = '-san';
+  }
   const honorific = getVal('honorific');
   const guests = getVal('guestCount') || '●';
   const nights = getVal('nightCount') || '●';
