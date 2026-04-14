@@ -294,7 +294,9 @@ body { font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif; backgroun
         <div class="form-group" style="margin-top:14px">
           <label>Geminiの回答をここに貼り付け</label>
           <textarea class="greeting-result" id="greetingResult" placeholder="Geminiが生成した寄り添い文をここに貼り付けてください..."></textarea>
-          <button class="btn-greeting btn-insert-greeting" onclick="insertGreeting()">📩 名乗りの後に挿入する</button>
+          <div style="margin-top:8px; padding:8px 12px; background:#e8f5e9; border-radius:6px; font-size:12px; color:#2e7d32;">
+            💡 貼り付けたら、STEP 4で「メールを作成する」を押すだけ。自動で名乗りの後に挿入されます。
+          </div>
         </div>
       </div>
     </div>
@@ -608,40 +610,20 @@ function copyGreetingPrompt() {
 
 function insertGreeting() {
   const greeting = document.getElementById('greetingResult').value.trim();
-  if (!greeting) {
-    alert('Geminiの回答を貼り付けてから押してください');
-    return;
-  }
+  if (!greeting) return;
   const output = document.getElementById('outputEmail');
-  if (!output.value.trim()) {
-    alert('先にSTEP 2〜4でメールを作成してから挿入してください');
-    return;
-  }
+  if (!output.value.trim()) return;
 
-  // メール本文の言語と寄り添い文の言語が合っているかチェック
-  const emailIsEN = selectedTemplate && selectedTemplate.endsWith('_en');
-  const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(greeting);
-  if (emailIsEN && hasJapanese) {
-    if (!confirm('メール本文は英語ですが、寄り添い文が日本語のようです。\n\n英語で再生成しますか？\n→「OK」で言語を英語に切替えます（プロンプトを再生成してください）\n→「キャンセル」でこのまま挿入します')) {
-      // そのまま挿入を続行
-    } else {
-      setGreetingLang('en');
-      generateGreetingPrompt();
-      alert('英語に切替えました。プロンプトをコピーしてGeminiで再生成してください。');
-      return;
-    }
-  }
-
-  // ①名前 → ②名乗り（中庭と申します / I'm Hiroko） → ③寄り添い文
-  // 名乗り行（「中庭と申します」or 「ありがとうございます」or "I'm Hiroko"の行）の後に挿入
+  // ①名前 → ②ありがとう → ③名乗り（中庭と申します / I'm Hiroko） → ④寄り添い文
+  // 名乗り行の後に挿入する
   const lines = output.value.split('\n');
   let insertIdx = -1;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    // 日本語：「ありがとうございます。」で終わる名乗り＋お礼の行を探す
-    if (line.includes('ありがとうございます') || line.includes('Thank you for choosing')) {
-      // この行の後の空行の後に挿入
+    // 名乗り行を探す（「中庭と申します」or「I'm Hiroko」）
+    if (line.includes('中庭と申します') || line.includes('中庭（なかにわ）と申します') || line.includes("I'm Hiroko")) {
+      // この行の後に挿入
       insertIdx = i + 1;
       // 次が空行ならその後に
       if (i + 1 < lines.length && lines[i + 1].trim() === '') {
@@ -669,8 +651,6 @@ function insertGreeting() {
   // ステップ更新
   document.getElementById('gStep3').className = 'greeting-step done';
   document.getElementById('gStep4').className = 'greeting-step done';
-
-  alert('寄り添い文を名乗りの後に挿入しました！');
 }
 
 // ============================
@@ -1506,6 +1486,11 @@ With love from Kojima🧵
       setGreetingLang('en');
     } else if (selectedTemplate.endsWith('_jp')) {
       setGreetingLang('jp');
+    }
+    // 寄り添い文があれば自動挿入
+    const greeting = document.getElementById('greetingResult').value.trim();
+    if (greeting) {
+      insertGreeting();
     }
   } else {
     document.getElementById('outputEmail').value = 'テンプレートが見つかりません。';
