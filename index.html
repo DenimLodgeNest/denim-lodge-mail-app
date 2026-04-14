@@ -621,8 +621,8 @@ function insertGreeting() {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    // 名乗り行を探す（「中庭と申します」or「I'm Hiroko」）
-    if (line.includes('中庭と申します') || line.includes('中庭（なかにわ）と申します') || line.includes("I'm Hiroko")) {
+    // 名乗り行を探す（中庭/Hiroko の自己紹介行）
+    if (line.includes('中庭と申します') || line.includes('中庭（なかにわ）と申します') || line.includes("I'm Hiroko") || line.includes("this is Hiroko") || line.includes("This is Hiroko")) {
       // この行の後に挿入
       insertIdx = i + 1;
       // 次が空行ならその後に
