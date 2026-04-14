@@ -748,6 +748,14 @@ function selectTemplate(id) {
   selectedTemplate = id;
   document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active'));
   event.currentTarget.classList.add('active');
+
+  // 英語テンプレ → 敬称を -san に、日本語テンプレ → 様 に自動切替
+  const hon = document.getElementById('honorific');
+  if (id.endsWith('_en') && (hon.value === '様' || hon.value === 'さん')) {
+    hon.value = '-san';
+  } else if (id.endsWith('_jp') && hon.value === '-san') {
+    hon.value = '様';
+  }
 }
 
 // ============================
